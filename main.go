@@ -8,6 +8,7 @@ import (
     "net/http"
     "strings"
     "time"
+    "os"
 
     "github.com/golang-jwt/jwt/v5"
     "github.com/gorilla/mux"
@@ -82,21 +83,14 @@ func main() {
     r := mux.NewRouter()
     r.Handle("/api/location-update", jwtMiddleware(http.HandlerFunc(locationUpdateHandler))).Methods("POST")
 
-    // Print token for testing
-    fmt.Println("Sample JWT:", generateJWT())
-
-    // Load TLS certs
-    certPath := "cert/server.crt"
-    keyPath := "cert/server.key"
-
-    srv := &http.Server{
-        Addr:    ":443",
-        Handler: r,
-        TLSConfig: &tls.Config{
-            MinVersion: tls.VersionTLS12,
-        },
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080" // fallback for local
     }
 
-    fmt.Println("Server listening on https://10.14.77.82/api/location-update")
-    log.Fatal(srv.ListenAndServeTLS(certPath, keyPath))
+    // Print sample token
+    fmt.Println("Sample JWT:", generateJWT())
+    fmt.Println("Listening on port", port)
+
+    log.Fatal(http.ListenAndServe(":"+port, r))
 }
